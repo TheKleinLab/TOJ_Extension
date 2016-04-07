@@ -11,6 +11,7 @@ import random
 from klibs.KLDraw import colors
 from klibs.KLUtilities import *
 from klibs.KLConstants import *
+from klibs.KLEventInterface import EventTicket as ET
 
 LEFT = "LEFT"
 RIGHT = "RIGHT"
@@ -125,15 +126,14 @@ class TOJ_Extension(klibs.Experiment):
 		events.append([events[-1][0] + 350, 'probe_off'])
 		events.append([events[-2][0] + int(trial_factors[4]), 'target_2_on'])
 		events.append([events[-1][0] + 300, 'target_2_off'])
-		Params.clock.register_events(events)
+		for e in events:
+			Params.clock.register_event(ET(e[1], e[0]))
 
 		self.clear()
 		self.display_refresh(False)
 
 	def trial(self, trial_factors):
-		start = time.time()
-		last_loop = time.time()
-		while not self.evi.after('target_2_off', True):
+		while self.evi.before('target_2_off', True):
 			self.display_refresh(False)
 			if self.evi.after('target_1_on', False):
 				self.blit(self.t1, location=self.target_1_loc, registration=5)
