@@ -51,7 +51,8 @@ class TOJ_Extension(klibs.Experiment):
 
 	# dynamic vars
 	probe_color = None
-	probe_loc = None
+	probe_loc = None  # english string (left/right)
+	probe_pos = None  # coordinate tuple
 	target_loc = None  # as LEFT or RIGHT, ie. for data
 	target_1_loc = None
 	target_2_loc = None
@@ -122,8 +123,8 @@ class TOJ_Extension(klibs.Experiment):
 		self.probe_color = random.choice(colors)  # saved for data file
 		self.probe_prototype.fill = self.probe_color
 		self.probe = self.probe_prototype.render()
-		probe_loc = random.choice([self.probe_pos_bias_loc] * self.probe_bias_freq + [self.probe_neg_bias_loc])
-		self.probe_loc = self.box_l_pos if probe_loc == LEFT else self.box_r_pos
+		self.probe_loc = random.choice([self.probe_pos_bias_loc] * self.probe_bias_freq + [self.probe_neg_bias_loc])
+		self.probe_pos = self.box_l_pos if self.probe_loc == LEFT else self.box_r_pos
 
 		events = [[self.t1_offset_constant + choice(range(15,450,15)), 'target_1_on']]
 		events.append([events[-1][0] + 350, 'probe_off'])
@@ -142,7 +143,7 @@ class TOJ_Extension(klibs.Experiment):
 			if self.evi.after('target_1_on', False):
 				self.blit(self.t1, location=self.target_1_loc, registration=5)
 				if trial_factors[1] == PROBE and self.evi.before('probe_off', False):
-					self.blit(self.probe, location=self.probe_loc, registration=5)
+					self.blit(self.probe, location=self.probe_pos, registration=5)
 			if self.evi.after('target_2_on', False):
 				self.blit(self.t2, location=self.target_2_loc, registration=5)
 				if on is None:
@@ -167,7 +168,7 @@ class TOJ_Extension(klibs.Experiment):
 			"trial_num": Params.trial_number,
 			"trial_type": trial_factors[1],
 			"soa": trial_factors[4],
-			"probe_loc": trial_factors[2],
+			"probe_loc": self.probe_loc,
 			"probe_color": self.probe_color if trial_factors[1] == PROBE else NA,
 			"probe_color_index": probe_index,
 			"probe_judgement": self.rc.color_listener.response(True, False),
