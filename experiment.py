@@ -44,7 +44,8 @@ class TOJ_Extension(klibs.Experiment):
 	probe_bias_freq = 8
 	color_list = None
 	t1_offset_constant = 1380
-
+	toj_judgement_m = None  # pre-rendered message
+	color_judgement_m = None  # ditto
 	# timing
 	target_onset = 500  # ms
 
@@ -74,6 +75,8 @@ class TOJ_Extension(klibs.Experiment):
 		self.wheel_prototype = ColorWheel(500)
 		# self.background = NumpySurface(img('ballfield.jpg'))
 		self.text_manager.add_style('probe_bias', 48, [20, 180, 220, 255])
+		self.toj_judgement_m = self.message("Which line appeared first?\n (Vertical = z   Horizontal = /)", blit=False)
+		self.color_judgement_m = self.message('Choose a color.', blit=False)
 
 	def block(self, block_num):
 		self.probe_neg_bias_loc = self.probe_pos_bias_loc
@@ -108,9 +111,8 @@ class TOJ_Extension(klibs.Experiment):
 		self.rc.enable(RC_COLORSELECT if trial_factors[1] == PROBE else RC_KEYPRESS)
 
 	def trial_prep(self, trial_factors):
-		self.target_loc = choice(self.probe_bias_freq * [self.probe_pos_bias_loc] + [self.probe_neg_bias_loc])
-		self.target_1_loc = self.box_l_pos if self.target_loc == LEFT else self.box_r_pos
-		self.target_2_loc = self.box_r_pos if self.target_loc == LEFT else self.box_l_pos
+		self.target_1_loc = self.box_l_pos if self.trial_factors[2] == LEFT else self.box_r_pos
+		self.target_2_loc = self.box_r_pos if self.trial_factors[2] == LEFT else self.box_l_pos
 		self.t1 = self.v_line.render() if trial_factors[3] == VERTICAL else self.h_line.render()
 		self.t2 = self.h_line.render() if trial_factors[3] == VERTICAL else self.v_line.render()
 
@@ -120,7 +122,8 @@ class TOJ_Extension(klibs.Experiment):
 		self.probe_color = random.choice(colors)  # saved for data file
 		self.probe_prototype.fill = self.probe_color
 		self.probe = self.probe_prototype.render()
-		self.probe_loc = self.box_l_pos if trial_factors[2] == LEFT else self.box_r_pos
+		probe_loc = random.choice([self.probe_pos_bias_loc] * self.probe_bias_freq + [self.probe_neg_bias_loc])
+		self.probe_loc = self.box_l_pos if probe_loc == LEFT else self.box_r_pos
 
 		events = [[self.t1_offset_constant + choice(range(15,450,15)), 'target_1_on']]
 		events.append([events[-1][0] + 350, 'probe_off'])
@@ -133,6 +136,7 @@ class TOJ_Extension(klibs.Experiment):
 		self.display_refresh(False)
 
 	def trial(self, trial_factors):
+		on = None
 		while self.evi.before('target_2_off', True):
 			self.display_refresh(False)
 			if self.evi.after('target_1_on', False):
@@ -141,7 +145,10 @@ class TOJ_Extension(klibs.Experiment):
 					self.blit(self.probe, location=self.probe_loc, registration=5)
 			if self.evi.after('target_2_on', False):
 				self.blit(self.t2, location=self.target_2_loc, registration=5)
+				if on is None:
+					on = time.time()
 			self.flip()
+		print "STIM2 ON FOR: {0}".format(time.time() - on)
 		self.rc.collect()
 
 		if trial_factors[1] == PROBE and self.rc.color_listener.response_made():
@@ -189,11 +196,12 @@ class TOJ_Extension(klibs.Experiment):
 
 	def toj_judgement(self):
 		self.fill()
-		self.message("Which line appeared first?\n (Vertical = z   Horizontal = /)", flip=True, location=Params.screen_c, registration=5)
+		self.blit(self.toj_judgement_m, 5, Params.screen_c)
+		self.flip()
 
 
 	def color_judgement(self):
 		self.fill()
 		self.blit(self.wheel, location=Params.screen_c, registration=5)
-		self.message('Choose a color.', location=Params.screen_c, registration=5)
+		self.blit(self.color_judgement_m, 5, Params.screen_c)
 		self.flip()

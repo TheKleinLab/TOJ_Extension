@@ -38,8 +38,8 @@ cue_back_size = 1 # deg of visual angle
 #########################################
 collect_demographics = True
 run_practice_blocks = True
-trials_per_block = 10
-trials_per_practice_block = 0
+trials_per_block = 120
+trials_per_practice_block = 2
 blocks_per_experiment = 1
 practice_blocks_per_experiment = 0
 trials_per_participant = 0
