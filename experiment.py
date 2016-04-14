@@ -46,6 +46,8 @@ class TOJ_Extension(klibs.Experiment):
 	t1_offset_constant = 1380
 	toj_judgement_m = None  # pre-rendered message
 	color_judgement_m = None  # ditto
+	trial_start_message = None
+
 	# timing
 	target_onset = 500  # ms
 
@@ -69,15 +71,15 @@ class TOJ_Extension(klibs.Experiment):
 		self.box_r_pos =  (2 * Params.screen_x // 3, Params.screen_c[1])
 		self.h_line = Line(deg_to_px(self.line_len_dv), self.box_border_color, self.box_border_stroke, 90)
 		self.v_line = Line(deg_to_px(self.line_len_dv), self.box_border_color, self.box_border_stroke)
-		self.probe_pos_bias_loc = choice([LEFT, RIGHT])
+		self.probe_pos_bias_loc = LEFT if Params.initial_probe_pos_bias_loc == "RIGHT" else RIGHT  # allows block-level toggling without inverting initial value
 		self.box = Rectangle(deg_to_px(self.box_size_dva), stroke=[self.box_border_stroke, self.box_border_color, STROKE_INNER]).render()
 		self.fixation = Asterisk(deg_to_px(self.fixation_size_dva), WHITE, 4)
 		self.probe_prototype = Circle(20)  # NOT dv in the baseball original, alas
 		self.wheel_prototype = ColorWheel(500)
-		# self.background = NumpySurface(img('ballfield.jpg'))
-		self.text_manager.add_style('probe_bias', 48, [20, 180, 220, 255])
+		self.text_manager.add_style('probe_bias', 28, [20, 180, 220, 255])
 		self.toj_judgement_m = self.message("Which line appeared first?\n (Vertical = z   Horizontal = /)", blit=False)
 		self.color_judgement_m = self.message('Choose a color.', blit=False)
+		self.trial_start_message = self.message("Press space to continue", "default", registration=5, location=Params.screen_c, blit=False)
 
 	def block(self, block_num):
 		self.probe_neg_bias_loc = self.probe_pos_bias_loc
@@ -90,9 +92,8 @@ class TOJ_Extension(klibs.Experiment):
 					 (Params.screen_c[0], (Params.screen_c[1] // 0.9) - 50),
 					 (Params.screen_c[0], (Params.screen_c[1] // 0.9))]
 		distribution_strings = ["During the next block of trials, the colored disk will appear more frequently at "
-								"the:",
-								"and less likely at the:"]
-		self.message(distribution_strings[0], location=locations[0], registration=5)
+								"the:", "and less likely at the:"]
+		self.message(distribution_strings[0], location=locations[0], registration=5) 
 		self.message(self.probe_pos_bias_loc, 'probe_bias', location=locations[1], registration=5)
 		self.message(distribution_strings[1], location=locations[2], registration=5)
 		self.message(self.probe_neg_bias_loc, 'probe_bias', location=locations[3], registration=5)
@@ -107,9 +108,12 @@ class TOJ_Extension(klibs.Experiment):
 		self.rc.keypress_listener.interrupts = True
 		self.rc.color_listener.interrupts = True
 		self.rc.color_listener.palette = colors
-		self.rc.keypress_listener.key_map = KeyMap('primary', ['z', '/'], ['LEFT', 'RIGHT'], [sdl2.SDLK_SLASH, sdl2.SDLK_z])
+		self.rc.keypress_listener.key_map = KeyMap('primary', ['KP8', 'KP2'], [VERTICAL, HORIZONTAL], [sdl2.SDLK_KP_8, sdl2.SDLK_KP_2])
 		self.rc.disable(RC_KEYPRESS if trial_factors[1] == PROBE else RC_COLORSELECT)
 		self.rc.enable(RC_COLORSELECT if trial_factors[1] == PROBE else RC_KEYPRESS)
+		r_mapping = self.rc.keypress_listener.key_map	
+		response_mapping = "Which line appeared first?\n (Vertical = {0}   Horizontal = {1})".format(*r_mapping.map[0])
+		self.toj_response_m = self.message(response_mapping, blit=False)
 
 	def trial_prep(self, trial_factors):
 		self.target_1_loc = self.box_l_pos if self.trial_factors[2] == LEFT else self.box_r_pos
@@ -132,8 +136,12 @@ class TOJ_Extension(klibs.Experiment):
 		events.append([events[-1][0] + 300, 'target_2_off'])
 		for e in events:
 			Params.clock.register_event(ET(e[1], e[0]))
-
-		self.clear()
+		if Params.trial_number > 1:
+			self.fill()	
+			self.blit(self.trial_start_message, registration=5, location=Params.screen_c)
+			self.flip()
+			self.any_key()	
+		self.fill()
 		self.display_refresh(False)
 
 	def trial(self, trial_factors):
@@ -142,16 +150,14 @@ class TOJ_Extension(klibs.Experiment):
 			self.display_refresh(False)
 			if self.evi.after('target_1_on', False):
 				self.blit(self.t1, location=self.target_1_loc, registration=5)
-				if trial_factors[1] == PROBE and self.evi.before('probe_off', False):
-					self.blit(self.probe, location=self.probe_pos, registration=5)
 			if self.evi.after('target_2_on', False):
 				self.blit(self.t2, location=self.target_2_loc, registration=5)
-				if on is None:
-					on = time.time()
+			if trial_factors[1] == PROBE and self.evi.before('probe_off', False) and self.evi.after('target_1_on', False):
+					self.blit(self.probe, location=self.probe_loc, registration=5)
 			self.flip()
-		print "STIM2 ON FOR: {0}".format(time.time() - on)
 		self.rc.collect()
-
+		self.fill()
+		self.flip()
 		if trial_factors[1] == PROBE and self.rc.color_listener.response_made():
 			probe_index = colors.index(self.probe_color)
 			response_index = colors.index(self.rc.color_listener.response(True, False))
