@@ -37,18 +37,11 @@ cue_back_size = 1 # deg of visual angle
 # Experiment Structure
 #########################################
 collect_demographics = True
-<<<<<<< HEAD
-run_practice_blocks = True
-trials_per_block = 120
-trials_per_practice_block = 2
-blocks_per_experiment = 1
-=======
 run_practice_blocks = False
-trials_per_block = 80
+trials_per_block = 1 #80
 trials_per_practice_block = 0
 blocks_per_experiment = 4
->>>>>>> 235b7dc0af25db15c897d186b19901c4f7604de2
-practice_blocks_per_experiment = 0
+practice_blocks_per_experiment = 2
 trials_per_participant = 0
 pre_render_block_messages = False
 show_practice_messages = True
@@ -63,3 +56,4 @@ dm_auto_threshold = True
 # EXPERIMENT-SPECIFIC PARAMS
 #########################################
 initial_probe_pos_bias_loc = "LEFT"  # "RIGHT"
+toj_judgement = "first"  # "second"
