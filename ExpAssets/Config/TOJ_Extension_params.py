@@ -37,11 +37,9 @@ cue_back_size = 1 # deg of visual angle
 # Experiment Structure
 #########################################
 collect_demographics = True
-run_practice_blocks = False
-trials_per_block = 1 #80
+trials_per_block = 5 #80
 trials_per_practice_block = 0
-blocks_per_experiment = 4
-practice_blocks_per_experiment = 2
+blocks_per_experiment = 2
 trials_per_participant = 0
 pre_render_block_messages = False
 show_practice_messages = True
@@ -51,6 +49,8 @@ show_practice_messages = True
 #########################################
 dm_suppress_debug_pane = False
 dm_auto_threshold = True
+dm_print_log = False
+dm_print_events = False
 
 #########################################
 # EXPERIMENT-SPECIFIC PARAMS

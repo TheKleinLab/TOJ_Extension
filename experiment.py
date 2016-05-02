@@ -3,10 +3,10 @@ import klibs
 __author__ = "jon mulle"
 
 from klibs import Params
+import time
 from random import choice
 from klibs.KLDraw import *
 from klibs.KLKeyMap import KeyMap
-import time
 import random
 from klibs.KLDraw import colors
 from klibs.KLUtilities import *
@@ -20,6 +20,7 @@ TARGET = "TARGET"
 WHITE = (255, 255, 255, 255)
 VERTICAL = "VERTICAL"
 HORIZONTAL = "HORIZONTAL"
+
 
 class TOJ_Extension(klibs.Experiment):
 	# graphical elements
@@ -43,7 +44,7 @@ class TOJ_Extension(klibs.Experiment):
 	probe_neg_bias_loc = None
 	probe_bias_freq = 8
 	color_list = None
-	t1_offset_constant = 1380
+	t1_offset_constant = 1380  # ms
 	toj_judgement_m = None  # pre-rendered message
 	color_judgement_m = None  # ditto
 	trial_start_message = None
@@ -63,10 +64,17 @@ class TOJ_Extension(klibs.Experiment):
 	t2 = None
 	wheel = None
 
+	# dbug
+	hline = None
+	vline = None
+	click_pos = (0,0)
+
 	def __init__(self, *args, **kwargs):
 		super(TOJ_Extension, self).__init__(*args, **kwargs)
 
 	def setup(self):
+		self.clear()
+		self.cursor_dot = Circle(5, fill=[0,0,0], stroke=[1,[255,2555,255]]).render()
 		Params.key_maps['TOJ_Extension_response'] = klibs.KeyMap('TOJ_Extension_response', [], [], [])
 		self.box_l_pos = (Params.screen_x // 3, Params.screen_c[1])
 		self.box_r_pos =  (2 * Params.screen_x // 3, Params.screen_c[1])
@@ -78,15 +86,15 @@ class TOJ_Extension(klibs.Experiment):
 		self.probe_prototype = Circle(20)  # NOT dv in the baseball original, alas
 		self.wheel_prototype = ColorWheel(500)
 		self.text_manager.add_style('probe_bias', 28, [20, 180, 220, 255])
+		self.text_manager.add_style('small', 14, [255, 255, 255, 255])
 		self.color_judgement_m = self.message('Choose a color.', blit=False)
 		self.trial_start_message = self.message("Press space to continue", "default", registration=5, location=Params.screen_c, blit=False)
 		self.insert_practice_block((1,2,4), factor_masks=[
 								   [[0,1,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]],
-								   [[1,0,0,0,0],[0,0,0,0,0],[1,0,0,0,0],[1,1,1,1,1]],
+								   [[1,0,0,0,0],[0,1,0,0,0],[1,0,0,0,0],[1,1,1,1,1]],
 								   [[1,0,0,0,0],[0,0,0,0,0],[1,0,0,0,0],[1,1,1,1,1]]])
 
 	def block(self):
-		self.fill()
 		def_size = self.text_manager.styles['default'].font_size_px
 		bias_size =self.text_manager.styles['probe_bias'].font_size_px
 		msg_y = 50
@@ -128,6 +136,7 @@ class TOJ_Extension(klibs.Experiment):
 		rmap_values.append(Params.toj_judgement)
 		response_mapping = "Which line appeared {2}?\n (Vertical = {0}   Horizontal = {1})".format(*rmap_values )
 		self.toj_judgement_m = self.message(response_mapping, blit=False)
+		self.rc.color_listener.set_target(self.wheel_prototype, Params.screen_c, 5)
 
 	def trial_prep(self):
 		self.target_1_loc = self.box_l_pos if self.target_loc == LEFT else self.box_r_pos
@@ -135,12 +144,11 @@ class TOJ_Extension(klibs.Experiment):
 		self.t1 = self.v_line.render() if self.first_target == VERTICAL else self.h_line.render()
 		self.t2 = self.h_line.render() if self.first_target == VERTICAL else self.v_line.render()
 
-		self.wheel_prototype.rotation = random.uniform(0, 360)
-		self.rc.color_listener.rotation = self.wheel_prototype.rotation
+		self.wheel_prototype.rotation = int(random.uniform(0, 360))
+		self.probe_angle = int(random.uniform(0, 360))
+		self.probe_color = colors[self.probe_angle]
 		self.wheel = self.wheel_prototype.render()
-		self.rc.color_listener.target(self.wheel, Params.screen_c, 5)
-		self.probe_color = random.choice(colors)  # saved for data file
-		self.probe_angle = self.rc.color_listener.color_to_wheel_angle(self.probe_color)
+
 		self.probe_prototype.fill = self.probe_color
 		self.probe = self.probe_prototype.render()
 		self.probe_loc = random.choice([self.probe_pos_bias_loc] * self.probe_bias_freq + [self.probe_neg_bias_loc])
@@ -158,6 +166,7 @@ class TOJ_Extension(klibs.Experiment):
 			self.flip()
 			self.any_key()	
 		self.fill()
+
 		self.display_refresh(False)
 
 	def trial(self):
@@ -179,10 +188,12 @@ class TOJ_Extension(klibs.Experiment):
 			"trial_num": Params.trial_number,
 			"trial_type": self.trial_type,
 			"soa": self.soa,
+			"rotation": self.wheel_prototype.rotation,
 			"probe_loc": self.probe_loc if self.trial_type == PROBE else NA,
 			"probe_color": self.probe_color if self.trial_type == PROBE else NA,
-			"probe_angle": self.probe_angle  if self.trial_type == PROBE else -1,
+			"probe_angle": int(self.probe_angle)  if self.trial_type == PROBE else -1,
 			"probe_judgement": self.rc.color_listener.response(True, False),
+			"probe_judgement_color": colors[int(self.rc.color_listener.response(True, False))],
 			"probe_rt": self.rc.color_listener.response(False, True),
 			"t1_loc": self.target_loc,
 			"t1_type": self.first_target,
@@ -209,9 +220,9 @@ class TOJ_Extension(klibs.Experiment):
 		self.blit(self.toj_judgement_m, 5, Params.screen_c)
 		self.flip()
 
-
 	def color_judgement(self):
 		self.fill()
 		self.blit(self.wheel, location=Params.screen_c, registration=5)
 		self.blit(self.color_judgement_m, 5, Params.screen_c)
+		self.blit(self.cursor_dot, 5, mouse_pos(False))
 		self.flip()
