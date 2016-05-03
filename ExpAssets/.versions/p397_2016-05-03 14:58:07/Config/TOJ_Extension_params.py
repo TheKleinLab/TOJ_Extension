@@ -37,7 +37,7 @@ cue_back_size = 1 # deg of visual angle
 # Experiment Structure
 #########################################
 collect_demographics = True
-trials_per_block = 240
+trials_per_block = 5 #80
 trials_per_practice_block = 0
 blocks_per_experiment = 2
 trials_per_participant = 0

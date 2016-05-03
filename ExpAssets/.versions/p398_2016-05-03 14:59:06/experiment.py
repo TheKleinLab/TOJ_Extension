@@ -44,14 +44,13 @@ class TOJ_Extension(klibs.Experiment):
 	probe_neg_bias_loc = None
 	probe_bias_freq = 8
 	color_list = None
+	t1_offset_constant = 1380  # ms
 	toj_judgement_m = None  # pre-rendered message
 	color_judgement_m = None  # ditto
 	trial_start_message = None
-	cursor_dot = None
 
 	# timing
 	target_onset = 500  # ms
-	t1_offset_constant = 1380  # ms
 
 	# dynamic vars
 	probe_color = None
@@ -64,6 +63,11 @@ class TOJ_Extension(klibs.Experiment):
 	t1 = None
 	t2 = None
 	wheel = None
+
+	# dbug
+	hline = None
+	vline = None
+	click_pos = (0,0)
 
 	def __init__(self, *args, **kwargs):
 		super(TOJ_Extension, self).__init__(*args, **kwargs)
@@ -85,10 +89,10 @@ class TOJ_Extension(klibs.Experiment):
 		self.text_manager.add_style('small', 14, [255, 255, 255, 255])
 		self.color_judgement_m = self.message('Choose a color.', blit=False)
 		self.trial_start_message = self.message("Press space to continue", "default", registration=5, location=Params.screen_c, blit=False)
-		self.insert_practice_block((1,2,4), trial_counts = 36, factor_masks=[
+		self.insert_practice_block((1,2,4), factor_masks=[
 								   [[0,1,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]],
-								   [[1,0,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]],
-								   [[1,0,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]]])
+								   [[1,0,0,0,0],[0,1,0,0,0],[1,0,0,0,0],[1,1,1,1,1]],
+								   [[1,0,0,0,0],[0,0,0,0,0],[1,0,0,0,0],[1,1,1,1,1]]])
 
 	def block(self):
 		def_size = self.text_manager.styles['default'].font_size_px
@@ -124,7 +128,7 @@ class TOJ_Extension(klibs.Experiment):
 		self.rc.uses([RC_KEYPRESS, RC_COLORSELECT])
 		self.rc.keypress_listener.interrupts = True
 		self.rc.color_listener.interrupts = True
-		self.rc.keypress_listener.key_map = KeyMap('primary', ['Key Pad 8', 'Key Pad 2'], [VERTICAL, HORIZONTAL], [sdl2.SDLK_KP_8, sdl2.SDLK_KP_2])
+		self.rc.keypress_listener.key_map = KeyMap('primary', ['KP8', 'KP2'], [VERTICAL, HORIZONTAL], [sdl2.SDLK_KP_8, sdl2.SDLK_KP_2])
 		self.rc.disable(RC_KEYPRESS if self.trial_type == PROBE else RC_COLORSELECT)
 		self.rc.enable(RC_COLORSELECT if self.trial_type == PROBE else RC_KEYPRESS)
 		r_mapping = self.rc.keypress_listener.key_map
@@ -151,7 +155,7 @@ class TOJ_Extension(klibs.Experiment):
 		self.probe_pos = self.box_l_pos if self.probe_loc == LEFT else self.box_r_pos
 
 		events = [[self.t1_offset_constant + choice(range(15,450,15)), 'target_1_on']]
-		events.append([events[-1][0] + 200, 'probe_off'])  # original 350 ms 
+		events.append([events[-1][0] + 350, 'probe_off'])
 		events.append([events[-2][0] + int(self.soa), 'target_2_on'])
 		events.append([events[-1][0] + 300, 'target_2_off'])
 		for e in events:
@@ -188,9 +192,9 @@ class TOJ_Extension(klibs.Experiment):
 			"probe_loc": self.probe_loc if self.trial_type == PROBE else NA,
 			"probe_color": self.probe_color if self.trial_type == PROBE else NA,
 			"probe_angle": int(self.probe_angle)  if self.trial_type == PROBE else -1,
-			"probe_judgement": self.rc.color_listener.response(True, False) if self.trial_type == PROBE else -1,
-			"probe_judgement_color": colors[int(self.rc.color_listener.response(True, False))]if self.trial_type == PROBE else NA,
-			"probe_rt": self.rc.color_listener.response(False, True) if self.trial_type == PROBE else -1,
+			"probe_judgement": self.rc.color_listener.response(True, False),
+			"probe_judgement_color": colors[int(self.rc.color_listener.response(True, False))],
+			"probe_rt": self.rc.color_listener.response(False, True),
 			"t1_loc": self.target_loc,
 			"t1_type": self.first_target,
 			"toj_judgement": self.rc.keypress_listener.response(True, False),
