@@ -69,6 +69,7 @@ class TOJ_Extension(klibs.Experiment):
 		super(TOJ_Extension, self).__init__(*args, **kwargs)
 
 	def setup(self):
+		hide_mouse_cursor()
 		self.clear()
 		self.cursor_dot = Circle(5, fill=[0,0,0], stroke=[1,[255,2555,255]]).render()
 		Params.key_maps['TOJ_Extension_response'] = klibs.KeyMap('TOJ_Extension_response', [], [], [])
@@ -91,6 +92,7 @@ class TOJ_Extension(klibs.Experiment):
 								   [[1,0,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]]])
 
 	def block(self):
+		self.fill()
 		def_size = self.text_manager.styles['default'].font_size_px
 		bias_size =self.text_manager.styles['probe_bias'].font_size_px
 		msg_y = 50
@@ -217,8 +219,9 @@ class TOJ_Extension(klibs.Experiment):
 		self.flip()
 
 	def color_judgement(self):
+		show_mouse_cursor()
 		self.fill()
 		self.blit(self.wheel, location=Params.screen_c, registration=5)
 		self.blit(self.color_judgement_m, 5, Params.screen_c)
-		self.blit(self.cursor_dot, 5, mouse_pos(False))
 		self.flip()
+		hide_mouse_cursor()
