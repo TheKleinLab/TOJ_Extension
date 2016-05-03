@@ -44,13 +44,14 @@ class TOJ_Extension(klibs.Experiment):
 	probe_neg_bias_loc = None
 	probe_bias_freq = 8
 	color_list = None
-	t1_offset_constant = 1380  # ms
 	toj_judgement_m = None  # pre-rendered message
 	color_judgement_m = None  # ditto
 	trial_start_message = None
+	cursor_dot = None
 
 	# timing
 	target_onset = 500  # ms
+	t1_offset_constant = 1380  # ms
 
 	# dynamic vars
 	probe_color = None
@@ -63,11 +64,6 @@ class TOJ_Extension(klibs.Experiment):
 	t1 = None
 	t2 = None
 	wheel = None
-
-	# dbug
-	hline = None
-	vline = None
-	click_pos = (0,0)
 
 	def __init__(self, *args, **kwargs):
 		super(TOJ_Extension, self).__init__(*args, **kwargs)
@@ -192,9 +188,9 @@ class TOJ_Extension(klibs.Experiment):
 			"probe_loc": self.probe_loc if self.trial_type == PROBE else NA,
 			"probe_color": self.probe_color if self.trial_type == PROBE else NA,
 			"probe_angle": int(self.probe_angle)  if self.trial_type == PROBE else -1,
-			"probe_judgement": self.rc.color_listener.response(True, False),
-			"probe_judgement_color": colors[int(self.rc.color_listener.response(True, False))],
-			"probe_rt": self.rc.color_listener.response(False, True),
+			"probe_judgement": self.rc.color_listener.response(True, False) if self.trial_type == PROBE else -1,
+			"probe_judgement_color": colors[int(self.rc.color_listener.response(True, False))]if self.trial_type == PROBE else NA,
+			"probe_rt": self.rc.color_listener.response(False, True) if self.trial_type == PROBE else -1,
 			"t1_loc": self.target_loc,
 			"t1_type": self.first_target,
 			"toj_judgement": self.rc.keypress_listener.response(True, False),
