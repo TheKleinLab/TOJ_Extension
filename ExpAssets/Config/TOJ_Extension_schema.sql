@@ -59,22 +59,27 @@ CREATE TABLE logs (
 	eyelink_clock integer
 );
 
+
 CREATE TABLE trials (
 	id integer primary key autoincrement not null,
 	participant_id integer key not null,
 	block_num integer not null,
 	trial_num integer not null,
 	trial_type text not null,
+	toj_judgement_type text not null,
+	trial_type text not null,
+	block_bias text not null,
 	rotation text not null,
 	probe_loc text not null,
 	probe_color text not null,
-	probe_angle integer not null,
+	probe_angle text not null,
 	probe_judgement text not null,
 	probe_judgement_color text not null,
-	probe_rt integer not null,
+	p_minus_j text not null,
+	probe_rt text not null,
 	t1_loc text not null,
 	t1_type text not null,
 	toj_judgement text not null,
-	toj_rt integer not null,
+	toj_rt text not null,
 	soa text not null
 );

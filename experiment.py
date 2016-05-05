@@ -42,7 +42,8 @@ class TOJ_Extension(klibs.Experiment):
 	probe_size_dv = 1
 	probe_pos_bias_loc = None
 	probe_neg_bias_loc = None
-	probe_bias_freq = 8
+	probe_lrg_bias_freq = 8
+	probe_sml_bias_freq = 2
 	color_list = None
 	toj_judgement_m = None  # pre-rendered message
 	color_judgement_m = None  # ditto
@@ -56,6 +57,7 @@ class TOJ_Extension(klibs.Experiment):
 	# dynamic vars
 	probe_color = None
 	probe_angle = None
+	probe_locs = None
 	probe_loc = None  # english string (left/right)
 	probe_pos = None  # coordinate tuple
 	target_loc = None  # as LEFT or RIGHT, ie. for data
@@ -86,13 +88,16 @@ class TOJ_Extension(klibs.Experiment):
 		self.text_manager.add_style('small', 14, [255, 255, 255, 255])
 		self.color_judgement_m = self.message('Choose a color.', blit=False)
 		self.trial_start_message = self.message("Press space to continue", "default", registration=5, location=Params.screen_c, blit=False)
-		self.insert_practice_block((1,2,4), trial_counts = 36, factor_masks=[
+		self.insert_practice_block((1,2,4), trial_counts = 40, factor_masks=[
 								   [[0,1,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]],
 								   [[1,0,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]],
 								   [[1,0,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]]])
 
 	def block(self):
 		self.fill()
+		# make sure there are enough of these to finish the block AND that this doesn't apply during practice blocks
+		self.probe_locs = 24 * [[self.probe_pos_bias_loc] * self.probe_lrg_bias_freq + [self.probe_neg_bias_loc] * self.probe_sml_bias_freq]
+		random.shuffle(self.probe_locs)
 		def_size = self.text_manager.styles['default'].font_size_px
 		bias_size =self.text_manager.styles['probe_bias'].font_size_px
 		msg_y = 50
@@ -149,7 +154,10 @@ class TOJ_Extension(klibs.Experiment):
 
 		self.probe_prototype.fill = self.probe_color
 		self.probe = self.probe_prototype.render()
-		self.probe_loc = random.choice([self.probe_pos_bias_loc] * self.probe_bias_freq + [self.probe_neg_bias_loc])
+		if Params.block_number not in (2, 4):
+			self.probe_loc = self.prob_locs.pop()
+		else:
+			self.probe_loc = self.probe_pos_bias_loc
 		self.probe_pos = self.box_l_pos if self.probe_loc == LEFT else self.box_r_pos
 
 		events = [[self.t1_offset_constant + choice(range(15,450,15)), 'target_1_on']]
@@ -180,23 +188,30 @@ class TOJ_Extension(klibs.Experiment):
 		self.rc.collect()
 		self.fill()
 		self.flip()
+		if self.trial_type == PROBE:
+			probe_judgement_diff = int(self.probe_angle) - self.rc.color_listener.response(True, False)
+		else:
+			probe_judgement_diff = NA
 
 		return {
 			"block_num": Params.block_number,
 			"trial_num": Params.trial_number,
 			"trial_type": self.trial_type,
+			"toj_judgement_type": Params.toj_judgement,
 			"soa": self.soa,
 			"rotation": self.wheel_prototype.rotation,
+			"probe_initial_bias": Params.initial_probe_pos_bias_loc,
 			"probe_loc": self.probe_loc if self.trial_type == PROBE else NA,
 			"probe_color": self.probe_color if self.trial_type == PROBE else NA,
-			"probe_angle": int(self.probe_angle)  if self.trial_type == PROBE else -1,
-			"probe_judgement": self.rc.color_listener.response(True, False) if self.trial_type == PROBE else -1,
+			"probe_angle": int(self.probe_angle) if self.trial_type == PROBE else NA,
+			"probe_judgement": self.rc.color_listener.response(True, False) if self.trial_type == PROBE else NA,
 			"probe_judgement_color": colors[int(self.rc.color_listener.response(True, False))]if self.trial_type == PROBE else NA,
-			"probe_rt": self.rc.color_listener.response(False, True) if self.trial_type == PROBE else -1,
+			"p_minus_j": probe_judgement_diff,
+			"probe_rt": self.rc.color_listener.response(False, True) if self.trial_type == PROBE else NA,
 			"t1_loc": self.target_loc,
 			"t1_type": self.first_target,
 			"toj_judgement": self.rc.keypress_listener.response(True, False),
-			"toj_rt": self.rc.keypress_listener.response(False, True),
+			"toj_rt": self.rc.keypress_listener.response(False, True)
 		}
 
 	def trial_clean_up(self):
