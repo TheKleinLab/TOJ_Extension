@@ -55,6 +55,7 @@ class TOJ_Extension(klibs.Experiment):
 	# timing
 	target_onset = 500  # ms
 	t1_offset_constant = 1380  # ms
+	block_message_display_interval = 3
 
 	# dynamic vars
 	probe_color = None
@@ -82,8 +83,8 @@ class TOJ_Extension(klibs.Experiment):
 		self.box_r_pos =  (2 * Params.screen_x // 3, Params.screen_c[1])
 		self.h_line = Line(deg_to_px(self.line_len_dv), self.box_border_color, self.box_border_stroke, 90)
 		self.v_line = Line(deg_to_px(self.line_len_dv), self.box_border_color, self.box_border_stroke)
-		self.probe_pos_bias_loc = LEFT if Params.initial_probe_pos_bias_loc == "RIGHT" else RIGHT  # allows block-level toggling without inverting initial value
-		self.probe_neg_bias_loc = RIGHT if Params.initial_probe_pos_bias_loc == "RIGHT" else LEFT  # allows block-level toggling without inverting initial value
+		self.probe_pos_bias_loc = Params.initial_probe_pos_bias_loc  # allows block-level toggling without inverting initial value
+		self.probe_neg_bias_loc = LEFT if Params.initial_probe_pos_bias_loc == "RIGHT" else RIGHT  # allows block-level toggling without inverting initial value
 		self.box = Rectangle(deg_to_px(self.box_size_dva), stroke=[self.box_border_stroke, self.box_border_color, STROKE_INNER]).render()
 		self.fixation = Asterisk(deg_to_px(self.fixation_size_dva), WHITE, 4)
 		self.probe_prototype = Circle(20)  # NOT dv in the baseball original, alas
@@ -132,6 +133,9 @@ class TOJ_Extension(klibs.Experiment):
 		else:
 			self.probe_locs *= 4
 		random.shuffle(self.probe_locs)
+		start = time.time()
+		while time.time() - start  < self.block_message_display_interval:
+			pump()
 		self.message("Press any key to start.", registration=5, location=[Params.screen_c[0], Params.screen_y * 0.8], flip=True)
 		self.any_key()
 
