@@ -80,6 +80,7 @@ class TOJ_Extension(klibs.Experiment):
 		self.h_line = Line(deg_to_px(self.line_len_dv), self.box_border_color, self.box_border_stroke, 90)
 		self.v_line = Line(deg_to_px(self.line_len_dv), self.box_border_color, self.box_border_stroke)
 		self.probe_pos_bias_loc = LEFT if Params.initial_probe_pos_bias_loc == "RIGHT" else RIGHT  # allows block-level toggling without inverting initial value
+		self.probe_neg_bias_loc = RIGHT if Params.initial_probe_pos_bias_loc == "RIGHT" else LEFT  # allows block-level toggling without inverting initial value
 		self.box = Rectangle(deg_to_px(self.box_size_dva), stroke=[self.box_border_stroke, self.box_border_color, STROKE_INNER]).render()
 		self.fixation = Asterisk(deg_to_px(self.fixation_size_dva), WHITE, 4)
 		self.probe_prototype = Circle(20)  # NOT dv in the baseball original, alas
@@ -87,7 +88,8 @@ class TOJ_Extension(klibs.Experiment):
 		self.text_manager.add_style('probe_bias', 28, [20, 180, 220, 255])
 		self.text_manager.add_style('small', 14, [255, 255, 255, 255])
 		self.color_judgement_m = self.message('Choose a color.', blit=False)
-		self.trial_start_message = self.message("Press space to continue", "default", registration=5, location=Params.screen_c, blit=False)
+		self.trial_start_message = self.message("Press space to continue", "default", blit=False)
+		self.toj_judgement_m = self.message("Which line appeared {2}?\n (Vertical = {0}   Horizontal = {1})".format(*rmap_values ), blit=False)
 		self.insert_practice_block((1,2,4), trial_counts = 40, factor_masks=[
 								   [[0,1,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]],
 								   [[1,0,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]],
@@ -96,9 +98,11 @@ class TOJ_Extension(klibs.Experiment):
 	def block(self):
 		self.fill()
 		# make sure there are enough of these to finish the block AND that this doesn't apply during practice blocks
+
 		self.probe_locs = [[self.probe_pos_bias_loc] * self.probe_lrg_bias_freq + [self.probe_neg_bias_loc] * self.probe_sml_bias_freq]
-		if Params.block_number in (3,5):
+		if Params.block_number not in (2,4):
 			self.probe_locs *= 24
+
 		random.shuffle(self.probe_locs)
 		def_size = self.text_manager.styles['default'].font_size_px
 		bias_size =self.text_manager.styles['probe_bias'].font_size_px
@@ -141,8 +145,6 @@ class TOJ_Extension(klibs.Experiment):
 		r_mapping = self.rc.keypress_listener.key_map
 		rmap_values = r_mapping.map[0]
 		rmap_values.append(Params.toj_judgement)
-		response_mapping = "Which line appeared {2}?\n (Vertical = {0}   Horizontal = {1})".format(*rmap_values )
-		self.toj_judgement_m = self.message(response_mapping, blit=False)
 		self.rc.color_listener.set_target(self.wheel_prototype, Params.screen_c, 5)
 
 	def trial_prep(self):
@@ -158,7 +160,7 @@ class TOJ_Extension(klibs.Experiment):
 
 		self.probe_prototype.fill = self.probe_color
 		self.probe = self.probe_prototype.render()
-		self.probe_loc = self.prob_locs.pop()
+		self.probe_loc = self.probe_locs.pop()
 		self.probe_pos = self.box_l_pos if self.probe_loc == LEFT else self.box_r_pos
 
 		events = [[self.t1_offset_constant + choice(range(15,450,15)), 'target_1_on']]
@@ -199,6 +201,7 @@ class TOJ_Extension(klibs.Experiment):
 			"trial_num": Params.trial_number,
 			"trial_type": self.trial_type,
 			"toj_judgement_type": Params.toj_judgement,
+			"block_bias": self.probe_pos_bias_loc,
 			"soa": self.soa,
 			"rotation": self.wheel_prototype.rotation,
 			"probe_initial_bias": Params.initial_probe_pos_bias_loc,
@@ -235,9 +238,7 @@ class TOJ_Extension(klibs.Experiment):
 		self.flip()
 
 	def color_judgement(self):
-		show_mouse_cursor()
 		self.fill()
 		self.blit(self.wheel, location=Params.screen_c, registration=5)
 		self.blit(self.color_judgement_m, 5, Params.screen_c)
 		self.flip()
-		hide_mouse_cursor()
