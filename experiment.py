@@ -159,7 +159,7 @@ class TOJ_Extension(klibs.Experiment):
 
 		self.probe_prototype.fill = self.probe_color
 		self.probe = self.probe_prototype.render()
-		self.probe_loc = self.prob_locs.pop()
+		self.probe_loc = self.probe_locs.pop()
 		self.probe_pos = self.box_l_pos if self.probe_loc == LEFT else self.box_r_pos
 
 		events = [[self.t1_offset_constant + choice(range(15,450,15)), 'target_1_on']]
