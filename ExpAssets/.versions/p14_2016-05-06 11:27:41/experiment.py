@@ -88,8 +88,7 @@ class TOJ_Extension(klibs.Experiment):
 		self.text_manager.add_style('probe_bias', 28, [20, 180, 220, 255])
 		self.text_manager.add_style('small', 14, [255, 255, 255, 255])
 		self.color_judgement_m = self.message('Choose a color.', blit=False)
-		self.trial_start_message = self.message("Press space to continue", "default", blit=False)
-		self.toj_judgement_m = self.message("Which line appeared {2}?\n (Vertical = {0}   Horizontal = {1})".format(*rmap_values ), blit=False)
+		self.trial_start_message = self.message("Press space to continue", "default", registration=5, location=Params.screen_c, blit=False)
 		self.insert_practice_block((1,2,4), trial_counts = 40, factor_masks=[
 								   [[0,1,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]],
 								   [[1,0,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]],
@@ -100,7 +99,7 @@ class TOJ_Extension(klibs.Experiment):
 		# make sure there are enough of these to finish the block AND that this doesn't apply during practice blocks
 
 		self.probe_locs = [[self.probe_pos_bias_loc] * self.probe_lrg_bias_freq + [self.probe_neg_bias_loc] * self.probe_sml_bias_freq]
-		if Params.block_number not in (2,4):
+		if Params.block_number in (3,5):
 			self.probe_locs *= 24
 
 		random.shuffle(self.probe_locs)
@@ -143,6 +142,8 @@ class TOJ_Extension(klibs.Experiment):
 		r_mapping = self.rc.keypress_listener.key_map
 		rmap_values = r_mapping.map[0]
 		rmap_values.append(Params.toj_judgement)
+		response_mapping = "Which line appeared {2}?\n (Vertical = {0}   Horizontal = {1})".format(*rmap_values )
+		self.toj_judgement_m = self.message(response_mapping, blit=False)
 		self.rc.color_listener.set_target(self.wheel_prototype, Params.screen_c, 5)
 
 	def trial_prep(self):
