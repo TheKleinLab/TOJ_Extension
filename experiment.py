@@ -102,14 +102,8 @@ class TOJ_Extension(klibs.Experiment):
 		self.fill()
 		# make sure there are enough of these to finish the block AND that this doesn't apply during practice blocks
 
-		self.probe_locs = [self.probe_pos_bias_loc] * self.probe_lrg_bias_freq + [self.probe_neg_bias_loc] * self.probe_sml_bias_freq
-		if Params.block_number not in (2,4):
-			self.probe_locs *= 24
-		else:
-			self.probe_locs *= 4
-		random.shuffle(self.probe_locs)
 		def_size = self.text_manager.styles['default'].font_size_px
-		bias_size =self.text_manager.styles['probe_bias'].font_size_px
+		bias_size = self.text_manager.styles['probe_bias'].font_size_px
 		msg_y = 50
 		blocks_remaining_str = "Block {0} of {1}".format(Params.block_number, Params.blocks_per_experiment)
 		self.message(blocks_remaining_str, 'default', registration=5, location=[Params.screen_c[0], msg_y])
@@ -118,7 +112,7 @@ class TOJ_Extension(klibs.Experiment):
 			self.message("(This is a practice block.)", 'default', registration=5, location=[Params.screen_c[0], msg_y])
 		msg_y = int(Params.screen_c[1] - 0.5* (5 * def_size + bias_size))
 		if Params.block_number != 1:
-			if Params.block_number in (2,4): # immediately after each probe-trial practice, repeat probe bias
+			if Params.block_number == 4: # immediately after each probe-trial practice, repeat probe bias
 				self.probe_neg_bias_loc = self.probe_pos_bias_loc
 				self.probe_pos_bias_loc = LEFT if self.probe_pos_bias_loc == RIGHT else RIGHT
 
@@ -131,8 +125,16 @@ class TOJ_Extension(klibs.Experiment):
 			msg_y += 2 * def_size
 			self.message(self.probe_neg_bias_loc, 'probe_bias', registration=5, location=[Params.screen_c[0], msg_y])
 			# msg_y =+ def_size + bias_size
+		self.probe_locs = [self.probe_pos_bias_loc] * self.probe_lrg_bias_freq + [
+			self.probe_neg_bias_loc] * self.probe_sml_bias_freq
+		if Params.block_number not in (2, 4):
+			self.probe_locs *= 24
+		else:
+			self.probe_locs *= 4
+		random.shuffle(self.probe_locs)
 		self.message("Press any key to start.", registration=5, location=[Params.screen_c[0], Params.screen_y * 0.8], flip=True)
 		self.any_key()
+
 
 	def setup_response_collector(self):
 		self.rc.display_callback = self.toj_judgement if self.trial_type == TARGET else self.color_judgement
