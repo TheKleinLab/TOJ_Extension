@@ -97,8 +97,11 @@ class TOJ_Extension(klibs.Experiment):
 	def block(self):
 		self.fill()
 		# make sure there are enough of these to finish the block AND that this doesn't apply during practice blocks
-		probe_locs = [self.probe_pos_bias_loc] * self.probe_lrg_bias_freq + [self.probe_neg_bias_loc] * self.probe_sml_bias_freq
-		self.probe_locs = 24 * probe_locs
+
+		self.probe_locs = [[self.probe_pos_bias_loc] * self.probe_lrg_bias_freq + [self.probe_neg_bias_loc] * self.probe_sml_bias_freq]
+		if Params.block_number in (3,5):
+			self.probe_locs *= 24
+
 		random.shuffle(self.probe_locs)
 		def_size = self.text_manager.styles['default'].font_size_px
 		bias_size =self.text_manager.styles['probe_bias'].font_size_px
@@ -156,10 +159,7 @@ class TOJ_Extension(klibs.Experiment):
 
 		self.probe_prototype.fill = self.probe_color
 		self.probe = self.probe_prototype.render()
-		if Params.block_number not in (2, 4):
-			self.probe_loc = self.probe_locs.pop()
-		else:
-			self.probe_loc = self.probe_pos_bias_loc
+		self.probe_loc = self.prob_locs.pop()
 		self.probe_pos = self.box_l_pos if self.probe_loc == LEFT else self.box_r_pos
 
 		events = [[self.t1_offset_constant + choice(range(15,450,15)), 'target_1_on']]
@@ -169,10 +169,10 @@ class TOJ_Extension(klibs.Experiment):
 		for e in events:
 			Params.clock.register_event(ET(e[1], e[0]))
 		if Params.trial_number > 1:
-			self.fill()	
+			self.fill()
 			self.blit(self.trial_start_message, registration=5, location=Params.screen_c)
 			self.flip()
-			self.any_key()	
+			self.any_key()
 		self.fill()
 
 		self.display_refresh(False)
