@@ -141,6 +141,8 @@ class TOJ_Extension(klibs.Experiment):
 		self.rc.keypress_listener.interrupts = True
 		self.rc.color_listener.interrupts = True
 		self.rc.keypress_listener.key_map = KeyMap('primary', *self.response_collector_keymapping)
+		anulus_inner_bound = self.wheel_prototype.radius - self.wheel_prototype.thickness
+		self.rc.color_listener.add_boundary("color_ring", [Params.screen_c, anulus_inner_bound, self.wheel_prototype.radius], "anulus")
 		self.rc.disable(RC_KEYPRESS if self.trial_type == PROBE else RC_COLORSELECT)
 		self.rc.enable(RC_COLORSELECT if self.trial_type == PROBE else RC_KEYPRESS)
 		self.rc.color_listener.set_target(self.wheel_prototype, Params.screen_c, 5)
