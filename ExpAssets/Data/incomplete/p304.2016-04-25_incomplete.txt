@@ -1,0 +1,14 @@
+# >>> KLIBS INFO
+# KLIBs Commit: 3e186637b4c04206bcf259b09ebfa00d0e0957a6
+# random_seed: 1462210215.25
+#
+# >>> EYELINK SETTINGS
+# Saccadic Velocity Threshold: 20
+# Saccadic Acceleration Threshold: 5000
+# Saccadic Motion Threshold: 0.15
+#
+# >>> EXPERIMENT SETTINGS
+# Trials Per Block: 240
+# Blocks Per Experiment: 2
+
+participant	sex	age	handedness	block_num	trial_num	trial_type	rotation	probe_loc	probe_color	probe_angle	probe_judgement	probe_judgement_color	probe_rt	t1_loc	t1_type	toj_judgement	toj_rt	soa
