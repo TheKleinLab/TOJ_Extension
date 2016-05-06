@@ -49,6 +49,8 @@ class TOJ_Extension(klibs.Experiment):
 	color_judgement_m = None  # ditto
 	trial_start_message = None
 	cursor_dot = None
+	response_collector_keymapping = (['Key Pad 8', 'Key Pad 2'], [VERTICAL, HORIZONTAL], [sdl2.SDLK_KP_8, sdl2.SDLK_KP_2])
+	toj_judgement_string = "Which line appeared {0}?\n (Vertical = {1}   Horizontal = {2})"
 
 	# timing
 	target_onset = 500  # ms
@@ -66,6 +68,7 @@ class TOJ_Extension(klibs.Experiment):
 	t1 = None
 	t2 = None
 	wheel = None
+
 
 	def __init__(self, *args, **kwargs):
 		super(TOJ_Extension, self).__init__(*args, **kwargs)
@@ -89,7 +92,7 @@ class TOJ_Extension(klibs.Experiment):
 		self.text_manager.add_style('small', 14, [255, 255, 255, 255])
 		self.color_judgement_m = self.message('Choose a color.', blit=False)
 		self.trial_start_message = self.message("Press space to continue", "default", blit=False)
-		self.toj_judgement_m = self.message("Which line appeared {2}?\n (Vertical = {0}   Horizontal = {1})".format(*rmap_values ), blit=False)
+		self.toj_judgement_m = self.message(self.toj_judgement_string.format(Params.toj_judgement, *self.response_collector_keymapping[0]), blit=False)
 		self.insert_practice_block((1,2,4), trial_counts = 40, factor_masks=[
 								   [[0,1,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]],
 								   [[1,0,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]],
@@ -137,12 +140,9 @@ class TOJ_Extension(klibs.Experiment):
 		self.rc.uses([RC_KEYPRESS, RC_COLORSELECT])
 		self.rc.keypress_listener.interrupts = True
 		self.rc.color_listener.interrupts = True
-		self.rc.keypress_listener.key_map = KeyMap('primary', ['Key Pad 8', 'Key Pad 2'], [VERTICAL, HORIZONTAL], [sdl2.SDLK_KP_8, sdl2.SDLK_KP_2])
+		self.rc.keypress_listener.key_map = KeyMap('primary', *self.response_collector_keymapping)
 		self.rc.disable(RC_KEYPRESS if self.trial_type == PROBE else RC_COLORSELECT)
 		self.rc.enable(RC_COLORSELECT if self.trial_type == PROBE else RC_KEYPRESS)
-		r_mapping = self.rc.keypress_listener.key_map
-		rmap_values = r_mapping.map[0]
-		rmap_values.append(Params.toj_judgement)
 		self.rc.color_listener.set_target(self.wheel_prototype, Params.screen_c, 5)
 
 	def trial_prep(self):
