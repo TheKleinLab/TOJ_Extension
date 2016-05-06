@@ -102,10 +102,9 @@ class TOJ_Extension(klibs.Experiment):
 		self.fill()
 		# make sure there are enough of these to finish the block AND that this doesn't apply during practice blocks
 
-		self.probe_locs = [[self.probe_pos_bias_loc] * self.probe_lrg_bias_freq + [self.probe_neg_bias_loc] * self.probe_sml_bias_freq]
+		self.probe_locs = [self.probe_pos_bias_loc] * self.probe_lrg_bias_freq + [self.probe_neg_bias_loc] * self.probe_sml_bias_freq
 		if Params.block_number not in (2,4):
 			self.probe_locs *= 24
-
 		random.shuffle(self.probe_locs)
 		def_size = self.text_manager.styles['default'].font_size_px
 		bias_size =self.text_manager.styles['probe_bias'].font_size_px
@@ -141,8 +140,7 @@ class TOJ_Extension(klibs.Experiment):
 		self.rc.keypress_listener.interrupts = True
 		self.rc.color_listener.interrupts = True
 		self.rc.keypress_listener.key_map = KeyMap('primary', *self.response_collector_keymapping)
-		anulus_inner_bound = self.wheel_prototype.radius - self.wheel_prototype.thickness
-		self.rc.color_listener.add_boundary("color_ring", [Params.screen_c, anulus_inner_bound, self.wheel_prototype.radius], "anulus")
+		self.rc.color_listener.add_boundary("color ring", [Params.screen_c, self.wheel_prototype.radius - 62, self.wheel_prototype.radius], "anulus")
 		self.rc.disable(RC_KEYPRESS if self.trial_type == PROBE else RC_COLORSELECT)
 		self.rc.enable(RC_COLORSELECT if self.trial_type == PROBE else RC_KEYPRESS)
 		self.rc.color_listener.set_target(self.wheel_prototype, Params.screen_c, 5)
