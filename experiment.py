@@ -42,8 +42,8 @@ class TOJ_Extension(klibs.Experiment):
 	probe_size_dv = 1
 	probe_pos_bias_loc = None
 	probe_neg_bias_loc = None
-	probe_lrg_bias_freq = 8
-	probe_sml_bias_freq = 2
+	probe_pos_bias_freq = 0.8
+	probe_neg_bias_freq = 0.2
 	color_list = None
 	toj_judgement_m = None  # pre-rendered message
 	color_judgement_m = None  # ditto
@@ -126,12 +126,12 @@ class TOJ_Extension(klibs.Experiment):
 			msg_y += 2 * def_size
 			self.message(self.probe_neg_bias_loc, 'probe_bias', registration=5, location=[Params.screen_c[0], msg_y])
 			# msg_y =+ def_size + bias_size
-		self.probe_locs = [self.probe_pos_bias_loc] * self.probe_lrg_bias_freq + [
-			self.probe_neg_bias_loc] * self.probe_sml_bias_freq
-		if Params.block_number not in (2, 4):
-			self.probe_locs *= 24
-		else:
-			self.probe_locs *= 4
+		t_count = Params.trials_per_block if Params.block_number in (3,5) else len(self.blocks[Params.block_number])
+		if Params.block_number in (3,5):
+			t_count *= float(Params.target_probe_trial_dist['probe']) / float(sum(Params.target_probe_trial_dist.values()))
+		pos_probe_trials = [self.probe_pos_bias_loc] * int(t_count *  self.probe_pos_bias_freq)
+		neg_probe_trials = [self.probe_neg_bias_loc] * int(t_count *  self.probe_neg_bias_freq)
+		self.probe_locs = pos_probe_trials + neg_probe_trials
 		random.shuffle(self.probe_locs)
 		start = time.time()
 		while time.time() - start  < self.block_message_display_interval:
