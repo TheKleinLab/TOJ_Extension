@@ -103,41 +103,43 @@ class TOJ_Extension(klibs.Experiment):
 
 		self.fill()
 		# make sure there are enough of these to finish the block AND that this doesn't apply during practice blocks
-
-		def_size = self.text_manager.styles['default'].font_size_px
-		bias_size = self.text_manager.styles['probe_bias'].font_size_px
-		msg_y = 50
-		blocks_remaining_str = "Block {0} of {1}".format(Params.block_number, Params.blocks_per_experiment)
-		self.message(blocks_remaining_str, 'default', registration=5, location=[Params.screen_c[0], msg_y])
-		msg_y += 2 * def_size
-		if Params.practicing:
-			self.message("(This is a practice block.)", 'default', registration=5, location=[Params.screen_c[0], msg_y])
-		msg_y = int(Params.screen_c[1] - 0.5* (5 * def_size + bias_size))
-		if Params.block_number != 1:
-			if Params.block_number == 4: # immediately after each probe-trial practice, repeat probe bias
-				self.probe_neg_bias_loc = self.probe_pos_bias_loc
-				self.probe_pos_bias_loc = LEFT if self.probe_pos_bias_loc == RIGHT else RIGHT
-
-			probe_strings = ["During this block, the colored disk will appear more often on the:", "and less often on the:"]
-			self.message(probe_strings[0], location=[Params.screen_c[0], msg_y], registration=5)
-			msg_y += 2 * def_size
-			self.message(self.probe_pos_bias_loc, 'probe_bias', registration=5, location=[Params.screen_c[0], msg_y])
-			msg_y += def_size + bias_size
-			self.message(probe_strings[1], 'default', registration=5, location=[Params.screen_c[0], msg_y])
-			msg_y += 2 * def_size
-			self.message(self.probe_neg_bias_loc, 'probe_bias', registration=5, location=[Params.screen_c[0], msg_y])
-			# msg_y =+ def_size + bias_size
-		t_count = Params.trials_per_block if Params.block_number in (3,5) else len(self.blocks[Params.block_number])
-		if Params.block_number in (3,5):
-			t_count *= float(Params.target_probe_trial_dist['probe']) / float(sum(Params.target_probe_trial_dist.values()))
-		pos_probe_trials = [self.probe_pos_bias_loc] * int(t_count *  self.probe_pos_bias_freq)
-		neg_probe_trials = [self.probe_neg_bias_loc] * int(t_count *  self.probe_neg_bias_freq)
+		t_count = Params.trials_per_block if Params.block_number in (3, 5) else len(self.blocks[Params.block_number])
+		if Params.block_number in (3, 5):
+			t_count *= float(Params.target_probe_trial_dist['probe']) / float(
+				sum(Params.target_probe_trial_dist.values()))
+		pos_probe_trials = [self.probe_pos_bias_loc] * int(t_count * self.probe_pos_bias_freq)
+		neg_probe_trials = [self.probe_neg_bias_loc] * int(t_count * self.probe_neg_bias_freq)
 		self.probe_locs = pos_probe_trials + neg_probe_trials
 		random.shuffle(self.probe_locs)
-		self.flip()
+
 		start = time.time()
-		while time.time() - start  < self.block_message_display_interval:
+		while time.time() - start < self.block_message_display_interval:
+			def_size = self.text_manager.styles['default'].font_size_px
+			bias_size = self.text_manager.styles['probe_bias'].font_size_px
+			msg_y = 50
+			blocks_remaining_str = "Block {0} of {1}".format(Params.block_number, Params.blocks_per_experiment)
+			self.message(blocks_remaining_str, 'default', registration=5, location=[Params.screen_c[0], msg_y])
+			msg_y += 2 * def_size
+			if Params.practicing:
+				self.message("(This is a practice block.)", 'default', registration=5, location=[Params.screen_c[0], msg_y])
+			msg_y = int(Params.screen_c[1] - 0.5* (5 * def_size + bias_size))
+			if Params.block_number != 1:
+				if Params.block_number == 4: # immediately after each probe-trial practice, repeat probe bias
+					self.probe_neg_bias_loc = self.probe_pos_bias_loc
+					self.probe_pos_bias_loc = LEFT if self.probe_pos_bias_loc == RIGHT else RIGHT
+
+				probe_strings = ["During this block, the colored disk will appear more often on the:", "and less often on the:"]
+				self.message(probe_strings[0], location=[Params.screen_c[0], msg_y], registration=5)
+				msg_y += 2 * def_size
+				self.message(self.probe_pos_bias_loc, 'probe_bias', registration=5, location=[Params.screen_c[0], msg_y])
+				msg_y += def_size + bias_size
+				self.message(probe_strings[1], 'default', registration=5, location=[Params.screen_c[0], msg_y])
+				msg_y += 2 * def_size
+				self.message(self.probe_neg_bias_loc, 'probe_bias', registration=5, location=[Params.screen_c[0], msg_y])
+				# msg_y =+ def_size + bias_size
 			pump()
+			self.flip()
+
 		self.message("Press any key to start.", registration=5, location=[Params.screen_c[0], Params.screen_y * 0.8], flip=True)
 		self.any_key()
 
