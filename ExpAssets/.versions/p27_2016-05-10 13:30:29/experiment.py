@@ -100,10 +100,6 @@ class TOJ_Extension(klibs.Experiment):
 								   [[1,0,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]]])
 
 	def block(self):
-		if Params.block_number != 1:
-				if Params.block_number == 4: # immediately after each probe-trial practice, repeat probe bias
-					self.probe_neg_bias_loc = self.probe_pos_bias_loc
-					self.probe_pos_bias_loc = LEFT if self.probe_pos_bias_loc == RIGHT else RIGHT
 
 		self.fill()
 		# make sure there are enough of these to finish the block AND that this doesn't apply during practice blocks
@@ -115,6 +111,10 @@ class TOJ_Extension(klibs.Experiment):
 		neg_probe_trials = [self.probe_neg_bias_loc] * int(t_count * self.probe_neg_bias_freq)
 		self.probe_locs = pos_probe_trials + neg_probe_trials
 		random.shuffle(self.probe_locs)
+		if Params.block_number != 1:
+				if Params.block_number == 4: # immediately after each probe-trial practice, repeat probe bias
+					self.probe_neg_bias_loc = self.probe_pos_bias_loc
+					self.probe_pos_bias_loc = LEFT if self.probe_pos_bias_loc == RIGHT else RIGHT
 					
 		def block_msg():
 			pump()
