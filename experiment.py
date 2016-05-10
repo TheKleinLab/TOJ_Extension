@@ -100,6 +100,7 @@ class TOJ_Extension(klibs.Experiment):
 								   [[1,0,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]]])
 
 	def block(self):
+
 		self.fill()
 		# make sure there are enough of these to finish the block AND that this doesn't apply during practice blocks
 
@@ -133,6 +134,7 @@ class TOJ_Extension(klibs.Experiment):
 		neg_probe_trials = [self.probe_neg_bias_loc] * int(t_count *  self.probe_neg_bias_freq)
 		self.probe_locs = pos_probe_trials + neg_probe_trials
 		random.shuffle(self.probe_locs)
+		self.flip()
 		start = time.time()
 		while time.time() - start  < self.block_message_display_interval:
 			pump()
@@ -166,7 +168,7 @@ class TOJ_Extension(klibs.Experiment):
 
 		self.probe_prototype.fill = self.probe_color
 		self.probe = self.probe_prototype.render()
-		self.probe_loc = self.probe_locs.pop()
+		self.probe_loc = self.probe_locs.pop() if self.trial_type == PROBE else NA
 		self.probe_pos = self.box_l_pos if self.probe_loc == LEFT else self.box_r_pos
 
 		events = [[self.t1_offset_constant + choice(range(15,450,15)), 'target_1_on']]
