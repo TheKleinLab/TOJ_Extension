@@ -55,9 +55,10 @@ class TOJ_Extension(klibs.Experiment):
 	# timing
 	target_onset = 500  # ms
 	t1_offset_constant = 1380  # ms
-	block_message_display_interval = 7
+	block_message_display_interval = 3
 
 	# dynamic vars
+	block_strings = None  # dict of all possible block messages rendered in setup for speed and to avoid sdl2_ttf errors
 	probe_color = None
 	probe_angle = None
 	probe_locs = None
@@ -99,6 +100,36 @@ class TOJ_Extension(klibs.Experiment):
 								   [[1,0,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]],
 								   [[1,0,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]]])
 
+		def block_msg(block_num, pos_bias, neg_bias):
+			r_strs = []
+			pump()
+			def_size = self.text_manager.styles['default'].font_size_px
+			bias_size = self.text_manager.styles['probe_bias'].font_size_px
+			msg_y = 50
+			blocks_remaining_str = "Block {0} of {1}".format(block_num, Params.blocks_per_experiment)
+			r_strs.append([self.message(blocks_remaining_str, 'default', registration=5, blit=False), [Params.screen_c[0], msg_y]])
+			msg_y += 2 * def_size
+			if block_num in (1,2,4):
+				r_strs.append([self.message("(This is a practice block.)", 'default', blit=False), [Params.screen_c[0], msg_y]])
+			msg_y = int(Params.screen_c[1] - 0.5 * (5 * def_size + bias_size))
+			if i != 1:
+				probe_strings = ["During this block, the colored disk will appear more often on the:",
+								 "and less often on the:"]
+				r_strs.append([self.message(probe_strings[0], blit=False), [Params.screen_c[0], msg_y]])
+				msg_y += 2 * def_size
+				r_strs.append([self.message(pos_bias, 'probe_bias',blit=False), [Params.screen_c[0], msg_y]])
+				msg_y += def_size + bias_size
+				r_strs.append([self.message(probe_strings[1], 'default', blit=False),[Params.screen_c[0], msg_y]])
+				msg_y += 2 * def_size
+				r_strs.append([self.message(neg_bias, 'probe_bias', blit=False), [Params.screen_c[0], msg_y]])
+			return r_strs
+
+		self.block_strings = {}
+		for i in range(1, 6):
+			for bias in [LEFT,RIGHT]:
+				n_bias = LEFT if bias == RIGHT else RIGHT
+				self.block_strings["b_{0}_pro_{1}".format(i, bias)] = block_msg(i, bias, n_bias)
+
 	def block(self):
 		if Params.block_number != 1:
 				if Params.block_number == 4: # immediately after each probe-trial practice, repeat probe bias
@@ -116,35 +147,23 @@ class TOJ_Extension(klibs.Experiment):
 		self.probe_locs = pos_probe_trials + neg_probe_trials
 		random.shuffle(self.probe_locs)
 					
-		def block_msg():
-			pump()
-			def_size = self.text_manager.styles['default'].font_size_px
-			bias_size = self.text_manager.styles['probe_bias'].font_size_px
-			msg_y = 50
-			blocks_remaining_str = "Block {0} of {1}".format(Params.block_number, Params.blocks_per_experiment)
-			self.message(blocks_remaining_str, 'default', registration=5, location=[Params.screen_c[0], msg_y])
-			msg_y += 2 * def_size
-			if Params.practicing:
-				self.message("(This is a practice block.)", 'default', registration=5, location=[Params.screen_c[0], msg_y])
-			msg_y = int(Params.screen_c[1] - 0.5* (5 * def_size + bias_size))
-			if Params.block_number != 1:
-				probe_strings = ["During this block, the colored disk will appear more often on the:", "and less often on the:"]
-				self.message(probe_strings[0], location=[Params.screen_c[0], msg_y], registration=5)
-				msg_y += 2 * def_size
-				self.message(self.probe_pos_bias_loc, 'probe_bias', registration=5, location=[Params.screen_c[0], msg_y])
-				msg_y += def_size + bias_size
-				self.message(probe_strings[1], 'default', registration=5, location=[Params.screen_c[0], msg_y])
-				msg_y += 2 * def_size
-				self.message(self.probe_neg_bias_loc, 'probe_bias', registration=5, location=[Params.screen_c[0], msg_y])
+
 		start = time.time()
 		while time.time() - start < self.block_message_display_interval:
-			block_msg()
+			self.fill()
+			pump()
+			for m in self.block_strings["b_{0}_pro_{1}".format(Params.block_number, self.probe_pos_bias_loc)]:
+				self.blit(m[0], 5, m[1])
 			self.flip()
 
-		block_msg()
-		pump()
+		flush()
 		self.message("Press any key to start.", registration=5, location=[Params.screen_c[0], Params.screen_y * 0.8], flip=True)
 		self.any_key()
+		Params.block_number +=1
+		if Params.block_number ==6:
+			self.quit()
+
+		return self.block()
 
 
 	def setup_response_collector(self):
