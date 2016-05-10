@@ -112,8 +112,7 @@ class TOJ_Extension(klibs.Experiment):
 		self.probe_locs = pos_probe_trials + neg_probe_trials
 		random.shuffle(self.probe_locs)
 
-		start = time.time()
-		while time.time() - start < self.block_message_display_interval:
+		def block_msg():
 			def_size = self.text_manager.styles['default'].font_size_px
 			bias_size = self.text_manager.styles['probe_bias'].font_size_px
 			msg_y = 50
@@ -136,10 +135,15 @@ class TOJ_Extension(klibs.Experiment):
 				self.message(probe_strings[1], 'default', registration=5, location=[Params.screen_c[0], msg_y])
 				msg_y += 2 * def_size
 				self.message(self.probe_neg_bias_loc, 'probe_bias', registration=5, location=[Params.screen_c[0], msg_y])
-				# msg_y =+ def_size + bias_size
-			pump()
-			self.flip()
 
+
+
+
+		start = time.time()
+		while time.time() - start < self.block_message_display_interval:
+			block_msg()
+			self.flip()
+		block_msg()
 		self.message("Press any key to start.", registration=5, location=[Params.screen_c[0], Params.screen_y * 0.8], flip=True)
 		self.any_key()
 
