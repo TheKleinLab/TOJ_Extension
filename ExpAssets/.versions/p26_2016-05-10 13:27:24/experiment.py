@@ -94,7 +94,7 @@ class TOJ_Extension(klibs.Experiment):
 		self.color_judgement_m = self.message('Choose a color.', blit=False)
 		self.trial_start_message = self.message("Press space to continue", "default", blit=False)
 		self.toj_judgement_m = self.message(self.toj_judgement_string.format(Params.toj_judgement, *self.response_collector_keymapping[0]), blit=False)
-		self.insert_practice_block((1,2,4), trial_counts = 40, factor_masks=[
+		self.insert_practice_block((1,2,4), trial_counts = 1, factor_masks=[
 								   [[0,1,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]],
 								   [[1,0,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]],
 								   [[1,0,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]]])
