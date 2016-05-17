@@ -100,7 +100,7 @@ class TOJ_Extension(klibs.Experiment):
 								   [[1,0,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]],
 								   [[1,0,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]]])
 
-		def block_msg(block_num, pos_bias, neg_bias): 
+		def block_msg(block_num, pos_bias, neg_bias):
 			r_strs = []
 			pump()
 			def_size = self.text_manager.styles['default'].font_size_px
@@ -159,7 +159,11 @@ class TOJ_Extension(klibs.Experiment):
 		flush()
 		self.message("Press any key to start.", registration=5, location=[Params.screen_c[0], Params.screen_y * 0.8], flip=True)
 		self.any_key()
+		Params.block_number +=1
+		if Params.block_number ==6:
+			self.quit()
 
+		return self.block()
 
 
 	def setup_response_collector(self):

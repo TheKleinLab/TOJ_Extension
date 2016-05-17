@@ -56,5 +56,5 @@ dm_print_events = False
 # EXPERIMENT-SPECIFIC PARAMS
 #########################################
 initial_probe_pos_bias_loc = "LEFT"  # "RIGHT"
-toj_judgement = "second"  # "first"
+toj_judgement = "first"  # "second"
 target_probe_trial_dist = {"probe":1, "target":2}  # should match the distribution in trial_type.param of TOJ_Extension_config.csv

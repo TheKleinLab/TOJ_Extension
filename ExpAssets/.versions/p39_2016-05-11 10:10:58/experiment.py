@@ -76,6 +76,8 @@ class TOJ_Extension(klibs.Experiment):
 		super(TOJ_Extension, self).__init__(*args, **kwargs)
 
 	def setup(self):
+		print px_to_deg(20)
+		self.quit()
 		hide_mouse_cursor()
 		self.clear()
 		self.cursor_dot = Circle(5, fill=[0,0,0], stroke=[1,[255,2555,255]]).render()
