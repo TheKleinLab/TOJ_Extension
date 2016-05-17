@@ -70,6 +70,7 @@ class TOJ_Extension(klibs.Experiment):
 	t1 = None
 	t2 = None
 	wheel = None
+	reblocked = 0
 
 
 	def __init__(self, *args, **kwargs):
@@ -138,15 +139,31 @@ class TOJ_Extension(klibs.Experiment):
 
 		self.fill()
 		# make sure there are enough of these to finish the block AND that this doesn't apply during practice blocks
-		t_count = Params.trials_per_block if Params.block_number in (3, 5) else len(self.blocks[Params.block_number])
+		t_count = Params.trials_per_block if Params.block_number in (3, 5) else len(self.blocks[Params.block_number - 1])
+
+		# if it's a non-practice block, get the subset of the block's trials that will be probed trials
 		if Params.block_number in (3, 5):
-			t_count *= float(Params.target_probe_trial_dist['probe']) / float(
-				sum(Params.target_probe_trial_dist.values()))
+			t_count *= Params.target_probe_trial_dist[PROBE] / sum(Params.target_probe_trial_dist.values())
 		pos_probe_trials = [self.probe_pos_bias_loc] * int(t_count * self.probe_pos_bias_freq)
 		neg_probe_trials = [self.probe_neg_bias_loc] * int(t_count * self.probe_neg_bias_freq)
 		self.probe_locs = pos_probe_trials + neg_probe_trials
 		random.shuffle(self.probe_locs)
-					
+
+		# def test_probe_dist():
+		# 	pos_probes_shuffled = self.probe_locs.count(LEFT)
+		# 	neg_probes_shuffled = self.probe_locs.count(RIGHT)
+		# 	pos_probes_correct = all([i == self.probe_pos_bias_loc for i in pos_probe_trials])
+		# 	neg_probes_correct = all([i == self.probe_neg_bias_loc for i in neg_probe_trials])
+		# 	vars = [t_count, len(pos_probe_trials), len(neg_probe_trials), pos_probes_correct, neg_probes_correct, Params.block_number, pos_probes_shuffled, neg_probes_shuffled, len(self.blocks[Params.block_number - 1])]
+		# 	print "Block: {5} ({8}) t_count: {0}\t\t pos_probe_trials: {1}->{6} ({3})\t\t neg_probe_trials: {2}->{7} ({4})".format(*vars)
+		# 	Params.block_number +=1
+		# 	if Params.block_number == 6:
+		# 		self.reblocked += 1
+		# 		if self.reblocked == 10:
+		# 			self.quit()
+		# 		Params.block_number = 1
+		# test_probe_dist()
+		# return self.block()
 
 		start = time.time()
 		while time.time() - start < self.block_message_display_interval:
@@ -159,7 +176,6 @@ class TOJ_Extension(klibs.Experiment):
 		flush()
 		self.message("Press any key to start.", registration=5, location=[Params.screen_c[0], Params.screen_y * 0.8], flip=True)
 		self.any_key()
-
 
 
 	def setup_response_collector(self):
