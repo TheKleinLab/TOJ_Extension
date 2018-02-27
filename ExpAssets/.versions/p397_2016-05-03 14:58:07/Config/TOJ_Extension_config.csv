@@ -1,7 +1,0 @@
-# Config file for TOJ_Extension
-trial_type.param, target_loc.param, first_target.param, soa.param
-PROBE           , LEFT            , VERTICAL          , 15[2],
-TARGET[3]       , RIGHT           , HORIZONTAL        , 45[2],
-                ,                 ,                   , 90[2],
-                ,                 ,                   , 135[2],
-                ,                 ,                   , 240,
