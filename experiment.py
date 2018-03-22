@@ -1,23 +1,28 @@
-import klibs
-
 __author__ = "jon mulle"
 
-from klibs import Params
-import time
-from random import choice
-from klibs.KLDraw import *
-from klibs.KLKeyMap import KeyMap
-import random
-from klibs.KLDraw import colors
-from klibs.KLUtilities import *
+import klibs
 from klibs.KLConstants import *
-from klibs.KLEventInterface import EventTicket as ET
+from klibs import P
+from klibs.KLUtilities import *
+from klibs.KLKeyMap import KeyMap
+from klibs.KLUserInterface import any_key
+from klibs.KLGraphics import fill, blit, flip, clear
+from klibs.KLGraphics.KLDraw import Asterisk, Line, Rectangle, Ellipse, ColorWheel
+from klibs.KLGraphics.colorspaces import const_lum as colors
+from klibs.KLEventInterface import TrialEventTicket as ET
+from klibs.KLCommunication import message
+
+import sdl2
+import time
+import random
+from random import choice
 
 LEFT = "LEFT"
 RIGHT = "RIGHT"
 PROBE = "PROBE"
 TARGET = "TARGET"
 WHITE = (255, 255, 255, 255)
+BLACK = (0, 0, 0, 255)
 VERTICAL = "VERTICAL"
 HORIZONTAL = "HORIZONTAL"
 
@@ -78,51 +83,53 @@ class TOJ_Extension(klibs.Experiment):
 
 	def setup(self):
 		hide_mouse_cursor()
-		self.clear()
-		self.cursor_dot = Circle(5, fill=[0,0,0], stroke=[1,[255,2555,255]]).render()
-		Params.key_maps['TOJ_Extension_response'] = klibs.KeyMap('TOJ_Extension_response', [], [], [])
-		self.box_l_pos = (Params.screen_x // 3, Params.screen_c[1])
-		self.box_r_pos =  (2 * Params.screen_x // 3, Params.screen_c[1])
+		clear()
+        
+		self.box_l_pos = (P.screen_x // 3, P.screen_c[1])
+		self.box_r_pos = (2 * P.screen_x // 3, P.screen_c[1])
 		self.h_line = Line(deg_to_px(self.line_len_dv), self.box_border_color, self.box_border_stroke, 90)
 		self.v_line = Line(deg_to_px(self.line_len_dv), self.box_border_color, self.box_border_stroke)
-		self.probe_pos_bias_loc = Params.initial_probe_pos_bias_loc  # allows block-level toggling without inverting initial value
-		self.probe_neg_bias_loc = LEFT if Params.initial_probe_pos_bias_loc == "RIGHT" else RIGHT  # allows block-level toggling without inverting initial value
+		self.probe_pos_bias_loc = P.initial_probe_pos_bias_loc  # allows block-level toggling without inverting initial value
+		self.probe_neg_bias_loc = LEFT if P.initial_probe_pos_bias_loc == "RIGHT" else RIGHT  # allows block-level toggling without inverting initial value
+        
 		self.box = Rectangle(deg_to_px(self.box_size_dva), stroke=[self.box_border_stroke, self.box_border_color, STROKE_INNER]).render()
-		self.fixation = Asterisk(deg_to_px(self.fixation_size_dva), WHITE, 4)
-		self.probe_prototype = Circle(20)  # NOT dv in the baseball original, alas
-		self.wheel_prototype = ColorWheel(500)
-		self.text_manager.add_style('probe_bias', 28, [20, 180, 220, 255])
-		self.text_manager.add_style('small', 14, [255, 255, 255, 255])
-		self.color_judgement_m = self.message('Choose a color.', blit=False)
-		self.trial_start_message = self.message("Press space to continue", "default", blit=False)
-		self.toj_judgement_m = self.message(self.toj_judgement_string.format(Params.toj_judgement, *self.response_collector_keymapping[0]), blit=False)
-		self.insert_practice_block((1,2,4), trial_counts = 40, factor_masks=[
-								   [[0,1,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]],
-								   [[1,0,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]],
-								   [[1,0,0,0,0],[1,1,1,1,1],[1,1,1,1,1],[1,1,1,1,1]]])
+		self.fixation = Asterisk(deg_to_px(self.fixation_size_dva), thickness=4, fill=WHITE)
+		self.probe = Ellipse(20)  # NOT dv in the baseball original, alas
+		self.wheel = ColorWheel(500, thickness=62)
+		self.wheel_disc = Ellipse(376, fill=BLACK) # to mimic old-style color wheel
+        
+		self.txtm.add_style('probe_bias', 28, [20, 180, 220, 255])
+		self.txtm.add_style('small', 14, [255, 255, 255, 255])
+		self.color_judgement_m = message('Choose a color.', blit_txt=False)
+		self.trial_start_message = message("Press space to continue", "default", blit_txt=False)
+		self.toj_judgement_m = message(self.toj_judgement_string.format(P.toj_judgement, *self.response_collector_keymapping[0]), blit_txt=False)
+        
+		self.insert_practice_block(1, trial_counts=40, factor_mask={"trial_type": "TARGET"})
+		self.insert_practice_block(2, trial_counts=40, factor_mask={"trial_type": "PROBE"})
+		self.insert_practice_block(4, trial_counts=40, factor_mask={"trial_type": "PROBE"})
 
 		def block_msg(block_num, pos_bias, neg_bias): 
 			r_strs = []
 			pump()
-			def_size = self.text_manager.styles['default'].font_size_px
-			bias_size = self.text_manager.styles['probe_bias'].font_size_px
+			def_size = self.txtm.styles['default'].font_size
+			bias_size = self.txtm.styles['probe_bias'].font_size
 			msg_y = 50
-			blocks_remaining_str = "Block {0} of {1}".format(block_num, Params.blocks_per_experiment)
-			r_strs.append([self.message(blocks_remaining_str, 'default', registration=5, blit=False), [Params.screen_c[0], msg_y]])
+			blocks_remaining_str = "Block {0} of {1}".format(block_num, P.blocks_per_experiment)
+			r_strs.append([message(blocks_remaining_str, 'default', registration=5, blit_txt=False), [P.screen_c[0], msg_y]])
 			msg_y += 2 * def_size
 			if block_num in (1,2,4):
-				r_strs.append([self.message("(This is a practice block.)", 'default', blit=False), [Params.screen_c[0], msg_y]])
-			msg_y = int(Params.screen_c[1] - 0.5 * (5 * def_size + bias_size))
+				r_strs.append([message("(This is a practice block.)", 'default', blit_txt=False), [P.screen_c[0], msg_y]])
+			msg_y = int(P.screen_c[1] - 0.5 * (5 * def_size + bias_size))
 			if i != 1:
 				probe_strings = ["During this block, the colored disk will appear more often on the:",
 								 "and less often on the:"]
-				r_strs.append([self.message(probe_strings[0], blit=False), [Params.screen_c[0], msg_y]])
+				r_strs.append([message(probe_strings[0], blit_txt=False), [P.screen_c[0], msg_y]])
 				msg_y += 2 * def_size
-				r_strs.append([self.message(pos_bias, 'probe_bias',blit=False), [Params.screen_c[0], msg_y]])
+				r_strs.append([message(pos_bias, 'probe_bias',blit_txt=False), [P.screen_c[0], msg_y]])
 				msg_y += def_size + bias_size
-				r_strs.append([self.message(probe_strings[1], 'default', blit=False),[Params.screen_c[0], msg_y]])
+				r_strs.append([message(probe_strings[1], 'default', blit_txt=False),[P.screen_c[0], msg_y]])
 				msg_y += 2 * def_size
-				r_strs.append([self.message(neg_bias, 'probe_bias', blit=False), [Params.screen_c[0], msg_y]])
+				r_strs.append([message(neg_bias, 'probe_bias', blit_txt=False), [P.screen_c[0], msg_y]])
 			return r_strs
 
 		self.block_strings = {}
@@ -132,18 +139,18 @@ class TOJ_Extension(klibs.Experiment):
 				self.block_strings["b_{0}_pro_{1}".format(i, bias)] = block_msg(i, bias, n_bias)
 
 	def block(self):
-		if Params.block_number != 1:
-				if Params.block_number == 4: # immediately after each probe-trial practice, repeat probe bias
+		if P.block_number != 1:
+				if P.block_number == 4: # immediately after each probe-trial practice, repeat probe bias
 					self.probe_neg_bias_loc = self.probe_pos_bias_loc
 					self.probe_pos_bias_loc = LEFT if self.probe_pos_bias_loc == RIGHT else RIGHT
 
-		self.fill()
+		fill()
 		# make sure there are enough of these to finish the block AND that this doesn't apply during practice blocks
-		t_count = Params.trials_per_block if Params.block_number in (3, 5) else len(self.blocks[Params.block_number - 1])
+		t_count = P.trials_per_block if P.block_number in (3, 5) else len(self.blocks[P.block_number - 1])
 
 		# if it's a non-practice block, get the subset of the block's trials that will be probed trials
-		if Params.block_number in (3, 5):
-			t_count *= Params.target_probe_trial_dist[PROBE] / sum(Params.target_probe_trial_dist.values())
+		if P.block_number in (3, 5):
+			t_count *= P.target_probe_trial_dist[PROBE] / sum(P.target_probe_trial_dist.values())
 		pos_probe_trials = [self.probe_pos_bias_loc] * int(t_count * self.probe_pos_bias_freq)
 		neg_probe_trials = [self.probe_neg_bias_loc] * int(t_count * self.probe_neg_bias_freq)
 		self.probe_locs = pos_probe_trials + neg_probe_trials
@@ -154,42 +161,43 @@ class TOJ_Extension(klibs.Experiment):
 		# 	neg_probes_shuffled = self.probe_locs.count(RIGHT)
 		# 	pos_probes_correct = all([i == self.probe_pos_bias_loc for i in pos_probe_trials])
 		# 	neg_probes_correct = all([i == self.probe_neg_bias_loc for i in neg_probe_trials])
-		# 	vars = [t_count, len(pos_probe_trials), len(neg_probe_trials), pos_probes_correct, neg_probes_correct, Params.block_number, pos_probes_shuffled, neg_probes_shuffled, len(self.blocks[Params.block_number - 1])]
+		# 	vars = [t_count, len(pos_probe_trials), len(neg_probe_trials), pos_probes_correct, neg_probes_correct, P.block_number, pos_probes_shuffled, neg_probes_shuffled, len(self.blocks[P.block_number - 1])]
 		# 	print "Block: {5} ({8}) t_count: {0}\t\t pos_probe_trials: {1}->{6} ({3})\t\t neg_probe_trials: {2}->{7} ({4})".format(*vars)
-		# 	Params.block_number +=1
-		# 	if Params.block_number == 6:
+		# 	P.block_number +=1
+		# 	if P.block_number == 6:
 		# 		self.reblocked += 1
 		# 		if self.reblocked == 10:
 		# 			self.quit()
-		# 		Params.block_number = 1
+		# 		P.block_number = 1
 		# test_probe_dist()
 		# return self.block()
 
 		start = time.time()
 		while time.time() - start < self.block_message_display_interval:
-			self.fill()
+			fill()
 			pump()
-			for m in self.block_strings["b_{0}_pro_{1}".format(Params.block_number, self.probe_pos_bias_loc)]:
-				self.blit(m[0], 5, m[1])
-			self.flip()
+			for m in self.block_strings["b_{0}_pro_{1}".format(P.block_number, self.probe_pos_bias_loc)]:
+				blit(m[0], 5, m[1])
+			flip()
 
 		flush()
-		self.message("Press any key to start.", registration=5, location=[Params.screen_c[0], Params.screen_y * 0.8], flip=True)
-		self.any_key()
+		message("Press any key to start.", registration=5, location=[P.screen_c[0], P.screen_y * 0.8])
+		flip()
+		any_key()
 
 
 	def setup_response_collector(self):
 		self.rc.display_callback = self.toj_judgement if self.trial_type == TARGET else self.color_judgement
-		self.rc.end_collection_event = 'response_period_end'
 		self.rc.terminate_after = [10, TK_S]
-		self.rc.uses([RC_KEYPRESS, RC_COLORSELECT])
-		self.rc.keypress_listener.interrupts = True
-		self.rc.color_listener.interrupts = True
-		self.rc.keypress_listener.key_map = KeyMap('primary', *self.response_collector_keymapping)
-		self.rc.color_listener.add_boundary("color ring", [Params.screen_c, self.wheel_prototype.radius - 62, self.wheel_prototype.radius], "anulus")
-		self.rc.disable(RC_KEYPRESS if self.trial_type == PROBE else RC_COLORSELECT)
-		self.rc.enable(RC_COLORSELECT if self.trial_type == PROBE else RC_KEYPRESS)
-		self.rc.color_listener.set_target(self.wheel_prototype, Params.screen_c, 5)
+		if self.trial_type == PROBE:
+			self.rc.uses(RC_COLORSELECT)
+			self.rc.color_listener.set_wheel(self.wheel)
+			self.rc.color_listener.set_target(self.probe)
+			self.rc.color_listener.interrupts = True
+		else:
+			self.rc.uses(RC_KEYPRESS)
+			self.rc.keypress_listener.key_map = KeyMap('primary', *self.response_collector_keymapping)
+			self.rc.keypress_listener.interrupts = True
 
 	def trial_prep(self):
 		self.target_1_loc = self.box_l_pos if self.target_loc == LEFT else self.box_r_pos
@@ -197,13 +205,13 @@ class TOJ_Extension(klibs.Experiment):
 		self.t1 = self.v_line.render() if self.first_target == VERTICAL else self.h_line.render()
 		self.t2 = self.h_line.render() if self.first_target == VERTICAL else self.v_line.render()
 
-		self.wheel_prototype.rotation = int(random.uniform(0, 360))
+		self.wheel.rotation = int(random.uniform(0, 360))
 		self.probe_angle = int(random.uniform(0, 360))
 		self.probe_color = colors[self.probe_angle]
-		self.wheel = self.wheel_prototype.render()
+		self.wheel.render()
 
-		self.probe_prototype.fill = self.probe_color
-		self.probe = self.probe_prototype.render()
+		self.probe.fill = self.probe_color
+		self.probe.render()
 		self.probe_loc = self.probe_locs.pop() if self.trial_type == PROBE else NA
 		self.probe_pos = self.box_l_pos if self.probe_loc == LEFT else self.box_r_pos
 
@@ -212,43 +220,43 @@ class TOJ_Extension(klibs.Experiment):
 		events.append([events[-2][0] + int(self.soa), 'target_2_on'])
 		events.append([events[-1][0] + 300, 'target_2_off'])
 		for e in events:
-			Params.clock.register_event(ET(e[1], e[0]))
-		if Params.trial_number > 1:
-			self.fill()
-			self.blit(self.trial_start_message, registration=5, location=Params.screen_c)
-			self.flip()
-			self.any_key()
-		self.fill()
+			self.evm.register_ticket(ET(e[1], e[0]))
+		if P.trial_number > 1:
+			fill()
+			blit(self.trial_start_message, registration=5, location=P.screen_c)
+			flip()
+			any_key()
+		fill()
 
 		self.display_refresh(False)
 
 	def trial(self):
-		while self.evi.before('target_2_off', True):
+		while self.evm.before('target_2_off', True):
 			self.display_refresh(False)
-			if self.evi.after('target_1_on', False):
-				self.blit(self.t1, location=self.target_1_loc, registration=5)
-			if self.evi.after('target_2_on', False):
-				self.blit(self.t2, location=self.target_2_loc, registration=5)
-			if self.trial_type == PROBE and self.evi.before('probe_off', False) and self.evi.after('target_1_on', False):
-					self.blit(self.probe, location=self.probe_pos, registration=5)
-			self.flip()
+			if self.evm.after('target_1_on', False):
+				blit(self.t1, location=self.target_1_loc, registration=5)
+			if self.evm.after('target_2_on', False):
+				blit(self.t2, location=self.target_2_loc, registration=5)
+			if self.trial_type == PROBE and self.evm.before('probe_off', False) and self.evm.after('target_1_on', False):
+					blit(self.probe, location=self.probe_pos, registration=5)
+			flip()
 		self.rc.collect()
-		self.fill()
-		self.flip()
+		fill()
+		flip()
 		if self.trial_type == PROBE:
 			probe_judgement_diff = int(self.probe_angle) - self.rc.color_listener.response(True, False)
 		else:
 			probe_judgement_diff = NA
 
 		return {
-			"block_num": Params.block_number,
-			"trial_num": Params.trial_number,
+			"block_num": P.block_number,
+			"trial_num": P.trial_number,
 			"trial_type": self.trial_type,
-			"toj_judgement_type": Params.toj_judgement,
+			"toj_judgement_type": P.toj_judgement,
 			"block_bias": self.probe_pos_bias_loc,
 			"soa": self.soa,
-			"rotation": self.wheel_prototype.rotation,
-			"probe_initial_bias": Params.initial_probe_pos_bias_loc,
+			"rotation": self.wheel.rotation,
+			"probe_initial_bias": P.initial_probe_pos_bias_loc,
 			"probe_loc": self.probe_loc if self.trial_type == PROBE else NA,
 			"probe_color": self.probe_color if self.trial_type == PROBE else NA,
 			"probe_angle": int(self.probe_angle) if self.trial_type == PROBE else NA,
@@ -258,8 +266,8 @@ class TOJ_Extension(klibs.Experiment):
 			"probe_rt": self.rc.color_listener.response(False, True) if self.trial_type == PROBE else NA,
 			"t1_loc": self.target_loc,
 			"t1_type": self.first_target,
-			"toj_judgement": self.rc.keypress_listener.response(True, False),
-			"toj_rt": self.rc.keypress_listener.response(False, True)
+			"toj_judgement": self.rc.keypress_listener.response(True, False) if self.trial_type == TARGET else NA,
+			"toj_rt": self.rc.keypress_listener.response(False, True) if self.trial_type == TARGET else NA
 		}
 
 	def trial_clean_up(self):
@@ -269,20 +277,21 @@ class TOJ_Extension(klibs.Experiment):
 		pass
 
 	def display_refresh(self, flip=True):
-		self.fill()
-		self.blit(self.box, location=self.box_l_pos, registration=5)
-		self.blit(self.box, location=self.box_r_pos, registration=5)
-		self.blit(self.fixation, location=Params.screen_c, registration=5)
+		fill()
+		blit(self.box, location=self.box_l_pos, registration=5)
+		blit(self.box, location=self.box_r_pos, registration=5)
+		blit(self.fixation, location=P.screen_c, registration=5)
 		if flip:
-			self.flip()
+			flip()
 
 	def toj_judgement(self):
-		self.fill()
-		self.blit(self.toj_judgement_m, 5, Params.screen_c)
-		self.flip()
+		fill()
+		blit(self.toj_judgement_m, 5, P.screen_c)
+		flip()
 
 	def color_judgement(self):
-		self.fill()
-		self.blit(self.wheel, location=Params.screen_c, registration=5)
-		self.blit(self.color_judgement_m, 5, Params.screen_c)
-		self.flip()
+		fill()
+		blit(self.wheel, location=P.screen_c, registration=5)
+		blit(self.wheel_disc, 5, P.screen_c)
+		blit(self.color_judgement_m, 5, P.screen_c)
+		flip()
