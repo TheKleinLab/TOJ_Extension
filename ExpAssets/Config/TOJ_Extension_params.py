@@ -1,5 +1,11 @@
 ## KLibs Parameter overrides ##
 
+from klibs import P
+
+# All of these values can be overridden locally in a file here:
+# ExpAssets/Local/TOJ_Extension_params.py
+# You will need to create it if it doesn't already exist.
+
 #########################################
 # Runtime Settings
 #########################################
@@ -43,6 +49,7 @@ multi_session_project = False
 trials_per_block = 240
 blocks_per_experiment = 2
 table_defaults = {}
+conditions = ['first', 'second']
 
 #########################################
 # Development Mode Settings
@@ -57,14 +64,13 @@ dm_show_gaze_dot = True
 #########################################
 primary_table = "trials"
 unique_identifier = "userhash"
-default_participant_fields = [[unique_identifier, "participant"], "sex", "age", "handedness"]
-default_participant_fields_sf = [[unique_identifier, "participant"], "random_seed", "sex", "age", "handedness"]
+default_participant_fields = [[unique_identifier, "participant"], "gender", "age", "handedness"]
+default_participant_fields_sf = [[unique_identifier, "participant"], "random_seed", "gender", "age", "handedness"]
 
 #########################################
 # EXPERIMENT-SPECIFIC PARAMS
 #########################################
-initial_probe_pos_bias_loc = "LEFT"  # "RIGHT"
-toj_judgement = "first"  # "second"
-# should match the distribution in trial_type.param of TOJ_Extension_config.csv. they must be floats for accuracy
-target_probe_trial_dist = {"PROBE":1.0, "TARGET":2.0}
-
+use_numpad = True # If False, use regular 2/8 instead of numpad 2/8 for responses
+judgement_type = "first" if P.condition == None else P.condition
+initial_probe_bias = "LEFT" # Which probe bias to have first (either "LEFT" or "RIGHT")
+trials_per_practice_block = 40
