@@ -6,9 +6,11 @@ TOJ_Extension is an experiment program for a study ([Redden, d'Entremont, & Klei
 
 On most trials of this experiment, participants are asked to judge which of two lines (one vertical, one horizontal) appeared first (or second) on the screen. On the rest of the trials, a colour dot appears briefly at one of the two target locations, and participants are asked to indicate what the colour was on a colour wheel. For one of the two experimental blocks, participants are informed that the colour dot will appear more often on the left than the right, and are told the inverse for the other experimental block.
 
+**NOTE**: This experiment program has been modified from the version used in [Redden et al., 2017b](https://doi.org/10.3758/s13414-017-1290-0). It has been updated to run properly with modern versions of KLibs, use degrees of visual angle for the sizing of all stimuli (so it can be replicated or demoed properly on smaller screens), and ask participants for their gender instead of their sex during demographics collection. If you intend to replicate this experiment, we highly recommend you use this branch to do so. However, you can still examine the original code in the [master](https://github.com/TheKleinLab/TOJ_Extension/tree/master) branch. Additionally, if you want to experience the experiment as close to as it was originally, with the minimum amount of changes required to run in modern KLibs, you can check out the [updated](https://github.com/TheKleinLab/TOJ_Extension/tree/updated) branch here.
+
 ## Requirements
 
-TOJ_Extension is programmed in Python 2.7 using the [KLibs framework](https://github.com/a-hurst/klibs). It has been developed and tested on macOS (10.9 through 10.13), but should also work with minimal hassle on computers running [Ubuntu](https://www.ubuntu.com/download/desktop) or [Debian](https://www.debian.org/distrib/) Linux. It is not currently compatible with any version of Windows, nor will it run under the [Windows Subsystem for Linux](https://msdn.microsoft.com/en-us/commandline/wsl/install_guide).
+TOJ_Extension is programmed in Python 2.7 (3.3+ compatible) using the [KLibs framework](https://github.com/a-hurst/klibs). It has been developed and tested on macOS (10.9 through 10.13), but should also work with minimal hassle on computers running [Ubuntu](https://www.ubuntu.com/download/desktop) or [Debian](https://www.debian.org/distrib/) Linux, as well as on computers running Windows 7 or newer with [a bit more effort](https://github.com/a-hurst/klibs/wiki/Installation-on-Windows).
 
 ## Getting Started
 

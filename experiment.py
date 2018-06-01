@@ -64,7 +64,6 @@ class TOJ_Extension(klibs.Experiment):
 		box_stroke = deg_to_px(0.2)
 		probe_size = deg_to_px(0.45)
 		wheel_size = deg_to_px(10.8)
-		text_size = deg_to_px(0.5)
 		
 		# Stimulus Drawbjects
 		self.fixation = Asterisk(fixation_size, thickness=fixation_stroke, fill=WHITE).render()
@@ -96,8 +95,7 @@ class TOJ_Extension(klibs.Experiment):
 		)
         
 		# Generate text for trial messages
-		self.txtm.styles['default'].font_size = text_size # redefine default font size in degrees
-		self.txtm.add_style('probe_bias', text_size, [20, 180, 220, 255])
+		self.txtm.add_style('probe_bias', '0.5deg', color=[20, 180, 220, 255])
 
 		toj_string = "Which line appeared {0}?\n (Vertical = Keypad 8   Horizontal = Keypad 2)"
 		self.toj_msg = message(toj_string.format(P.judgement_type), align='center', blit_txt=False)

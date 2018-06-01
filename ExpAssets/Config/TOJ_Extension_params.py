@@ -29,7 +29,8 @@ labjacking = False
 #########################################
 default_fill_color = (45, 45, 45, 45)
 default_color = (255, 255, 255, 255)
-default_font_size = 28
+default_font_size = 0.5
+default_font_unit = 'deg'
 default_font_name = 'Frutiger'
 
 #########################################
